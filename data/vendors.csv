@@ -1,0 +1,31 @@
+vendor_id,vendor_name,category,gstin,state,city,registered_bank_account,ifsc_code,usual_gst_rate,historical_avg_invoice_amount,expected_monthly_invoice_count,risk_tier,active
+V001,Apex Solutions Pvt Ltd,Hardware,36ABCDE1F2Z1,Telangana,Hyderabad,100000007919,FRAU0000001,12,67394,6,Low,True
+V002,Nova Services LLP,Office Supplies,29ABCDE2F3Z2,Karnataka,Bengaluru,100000015838,FRAU0000002,28,335921,4,Low,True
+V003,Vertex Technologies Pvt Ltd,Consulting,27ABCDE3F4Z3,Maharashtra,Mumbai,100000023757,FRAU0000003,5,230682,7,Low,True
+V004,Zenith Technologies Pvt Ltd,Cloud Services,33ABCDE4F5Z4,Tamil Nadu,Coimbatore,100000031676,FRAU0000004,18,65824,5,Medium,True
+V005,Orbit Technologies Pvt Ltd,Marketing,07ABCDE5F6Z5,Delhi,New Delhi,100000039595,FRAU0000005,18,120698,1,Low,True
+V006,Prime Enterprises,Office Supplies,24ABCDE6F7Z6,Gujarat,Ahmedabad,100000047514,FRAU0000006,5,275077,7,Low,True
+V007,Nexus Enterprises,Training,19ABCDE7F8Z7,West Bengal,Kolkata,100000055433,FRAU0000007,18,374482,6,Medium,True
+V008,BluePeak Services LLP,Office Supplies,09ABCDE8F9Z8,Uttar Pradesh,Lucknow,100000063352,FRAU0000008,28,365801,6,Low,True
+V009,Infiniti Services LLP,Facility Management,36ABCDE9F1Z9,Telangana,Warangal,100000071271,FRAU0000009,12,268782,1,Medium,True
+V010,Quantum Technologies Pvt Ltd,Hardware,29ABCDE0F2Z0,Karnataka,Bengaluru,100000079190,FRAU0000010,5,423880,4,Medium,True
+V011,Pioneer Industries Ltd,Hardware,27ABCDE1F3Z1,Maharashtra,Mumbai,100000087109,FRAU0000011,28,262667,3,Low,True
+V012,Sterling Technologies Pvt Ltd,Facility Management,33ABCDE2F4Z2,Tamil Nadu,Coimbatore,100000095028,FRAU0000012,18,111711,7,Low,True
+V013,Vistara Solutions Pvt Ltd,Training,07ABCDE3F5Z3,Delhi,New Delhi,100000102947,FRAU0000013,12,396244,5,Low,True
+V014,Crest Technologies Pvt Ltd,Cloud Services,24ABCDE4F6Z4,Gujarat,Ahmedabad,100000110866,FRAU0000014,28,216146,6,Low,True
+V015,Trident Enterprises,IT Services,19ABCDE5F7Z5,West Bengal,Kolkata,100000118785,FRAU0000015,12,284078,4,Medium,True
+V016,Matrix Industries Ltd,Hardware,09ABCDE6F8Z6,Uttar Pradesh,Lucknow,100000126704,FRAU0000016,5,238968,2,Low,True
+V017,Accord Technologies Pvt Ltd,Cloud Services,36ABCDE7F9Z7,Telangana,Warangal,100000134623,FRAU0000017,28,68764,4,Medium,True
+V018,Sapphire Technologies Pvt Ltd,Hardware,29ABCDE8F1Z8,Karnataka,Mysuru,100000142542,FRAU0000018,12,446747,1,Low,True
+V019,Nimbus Services LLP,Marketing,27ABCDE9F2Z9,Maharashtra,Pune,100000150461,FRAU0000019,28,432688,6,Low,True
+V020,Summit Services LLP,Cloud Services,33ABCDE0F3Z0,Tamil Nadu,Chennai,100000158380,FRAU0000020,5,156460,5,Medium,True
+V021,TechNova Technologies Pvt Ltd,Logistics,07ABCDE1F4Z1,Delhi,New Delhi,100000166299,FRAU0000021,28,103483,6,Low,True
+V022,GreenLeaf Industries Ltd,Training,24ABCDE2F5Z2,Gujarat,Surat,100000174218,FRAU0000022,28,357748,3,Low,True
+V023,Metro Solutions Pvt Ltd,Industrial Supplies,19ABCDE3F6Z3,West Bengal,Kolkata,100000182137,FRAU0000023,18,57262,7,Medium,True
+V024,Rapid Solutions Pvt Ltd,Hardware,09ABCDE4F7Z4,Uttar Pradesh,Lucknow,100000190056,FRAU0000024,28,236701,7,Low,True
+V025,Core Enterprises,Industrial Supplies,36ABCDE5F8Z5,Telangana,Hyderabad,100000197975,FRAU0000025,12,347011,6,Low,True
+V026,Elite Enterprises,Industrial Supplies,29ABCDE6F9Z6,Karnataka,Bengaluru,100000205894,FRAU0000026,12,385952,2,Low,True
+V027,Fusion Services LLP,Industrial Supplies,27ABCDE7F1Z7,Maharashtra,Mumbai,100000213813,FRAU0000027,5,197855,4,Low,True
+V028,Bright Solutions Pvt Ltd,Office Supplies,33ABCDE8F2Z8,Tamil Nadu,Coimbatore,100000221732,FRAU0000028,18,261450,1,Medium,True
+V029,Alpha Technologies Pvt Ltd,IT Services,07ABCDE9F3Z9,Delhi,New Delhi,100000229651,FRAU0000029,12,284620,2,Medium,True
+V030,Omega Solutions Pvt Ltd,Cloud Services,24ABCDE0F4Z0,Gujarat,Ahmedabad,100000237570,FRAU0000030,5,378103,5,High,True
