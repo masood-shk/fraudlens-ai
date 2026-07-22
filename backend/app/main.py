@@ -4,6 +4,9 @@ import shutil
 import tempfile
 from pathlib import Path
 
+from datetime import datetime
+import uuid
+
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -65,6 +68,75 @@ def analyze_invoice(file: UploadFile = File(...)):
             )
 
         result = pipeline.analyze(temp_path)
+        print("========== PIPELINE RESULT ==========")
+        print(result)
+        print("====================================")
+
+        now = datetime.now()
+        case_id = f"FL-{now.strftime('%Y%m%d')}-{uuid.uuid4().hex[:6].upper()}"
+        generated_at = now.strftime("%d %b %Y, %I:%M %p")
+
+        fraud = result.get("fraud_analysis", {})
+        invoice = result.get("extracted_invoice", {})
+
+        decision = fraud.get("decision", "REVIEW")
+        risk_score = fraud.get("final_risk_score", 0)
+
+        findings = fraud.get("rule_based_analysis", {}).get("signals", [])
+
+        critical_findings = []
+        for finding in findings:
+            if isinstance(finding, dict):
+                critical_findings.append(
+                    finding.get("title")
+                    or finding.get("message")
+                    or finding.get("description")
+                    or str(finding)
+                )
+            else:
+                critical_findings.append(str(finding))
+
+        if not critical_findings:
+            critical_findings.append("No major fraud indicators detected.")
+
+        recommendation_map = {
+            "APPROVE": [
+                "Proceed with payment.",
+                "Archive the investigation record.",
+            ],
+            "REVIEW": [
+                "Send the invoice for manual review.",
+                "Verify supporting documents before payment.",
+            ],
+            "BLOCK": [
+                "Do not release payment.",
+                "Escalate to the Finance Compliance team.",
+            ],
+        }
+
+        result["investigation_report"] = {
+            "case_id": case_id,
+            "generated_at": generated_at,
+            "generated_by": "FraudLens AI",
+            "status": "Completed",
+            "invoice": {
+                "invoice_number": invoice.get("invoice_number", "Unknown"),
+                "vendor": invoice.get("vendor", "Unknown"),
+                "invoice_date": invoice.get("invoice_date", "Unknown"),
+                "amount": invoice.get("amount", "Unknown"),
+            },
+            "decision": decision,
+            "risk_score": risk_score,
+            "summary": f"The invoice was classified as {decision} with a risk score of {risk_score} based on the combined fraud analysis.",
+            "critical_findings": critical_findings,
+            "recommended_actions": recommendation_map.get(
+                str(decision).upper(),
+                ["Perform additional manual verification."]
+            ),
+        }
+        print("========== FINAL RESPONSE ==========")
+        print(result)
+        print("====================================")
         return result
 
     except HTTPException:

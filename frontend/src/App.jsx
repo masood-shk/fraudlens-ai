@@ -1,7 +1,20 @@
+import { downloadInvestigationReport } from "./utils/pdfReport";
 import { useEffect, useState } from 'react'
+import {
+  PieChart,
+  Pie,
+  Cell,
+  ResponsiveContainer,
+  Tooltip,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+} from 'recharts'
 import './App.css'
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://fraudlens-ai-2vyx.onrender.com'
+const API_URL = 'http://127.0.0.1:8000'
 
 function App() {
   const [file, setFile] = useState(null)
@@ -58,6 +71,7 @@ function App() {
       })
 
       const data = await response.json()
+      console.log("API Response:", data);
 
       if (!response.ok) {
         throw new Error(data.detail || `Failed to analyze the invoice (${response.status}).`)
@@ -65,6 +79,7 @@ function App() {
       const fraud = data.fraud_analysis || {}
       const invoice = data.extracted_invoice || {}
       const vendorMatch = data.vendor_match || {}
+      const investigationReport = data.investigation_report || {}
       const ruleSignals = fraud.rule_based_analysis?.signals || []
 
       const normalizedResult = {
@@ -83,6 +98,7 @@ function App() {
           title: (signal.check || 'Fraud signal').replaceAll('_', ' '),
           description: signal.message || 'Potential fraud signal detected.',
         })),
+        investigation_report: investigationReport,
       }
       setResult(normalizedResult)
       setHistory((currentHistory) => [
@@ -104,6 +120,55 @@ function App() {
       setLoading(false)
     }
   }
+
+  const riskDistribution = [
+    { name: 'Approved', value: history.filter(item => item.decision === 'approve').length },
+    { name: 'Review', value: history.filter(item => item.decision === 'review').length },
+    { name: 'Blocked', value: history.filter(item => item.decision === 'block').length },
+  ]
+
+  const COLORS = ['#22c55e', '#facc15', '#ef4444']
+
+  const trendData = history
+    .slice()
+    .reverse()
+    .map((item, index) => ({
+      analysis: index + 1,
+      risk: Number(item.score),
+    }))
+
+  const averageRisk = history.length
+    ? (history.reduce((sum, item) => sum + Number(item.score), 0) / history.length).toFixed(1)
+    : '0.0'
+
+  const approvalRate = history.length
+    ? ((history.filter(item => item.decision === 'approve').length / history.length) * 100).toFixed(0)
+    : '0'
+
+  const highestRisk = history.reduce(
+    (max, item) => (Number(item.score) > Number(max.score || -1) ? item : max),
+    {}
+  )
+  const highRiskAlerts = history
+    .filter(item => Number(item.score) >= 70)
+    .sort((a, b) => Number(b.score) - Number(a.score))
+    .slice(0, 5)
+
+  const topVendors = Object.values(
+    history.reduce((acc, item) => {
+      if (!acc[item.vendor]) {
+        acc[item.vendor] = {
+          vendor: item.vendor,
+          count: 0,
+        }
+      }
+
+      acc[item.vendor].count += 1
+      return acc
+    }, {})
+  )
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 5)
 
   return (
     <div className="app-shell">
@@ -131,6 +196,235 @@ function App() {
       </header>
 
       <main className="workspace">
+        <section className="analytics-summary panel">
+          <div className="quick-stats">
+            <div>
+              <span>Total Analyses</span>
+              <strong>{history.length}</strong>
+            </div>
+            <div>
+              <span>Approved</span>
+              <strong>{history.filter(item => item.decision === 'approve').length}</strong>
+            </div>
+            <div>
+              <span>Review</span>
+              <strong>{history.filter(item => item.decision === 'review').length}</strong>
+            </div>
+            <div>
+              <span>Blocked</span>
+              <strong>{history.filter(item => item.decision === 'block').length}</strong>
+            </div>
+            <div>
+              <span>Average Risk</span>
+              <strong>
+                {history.length
+                  ? (history.reduce((sum, item) => sum + Number(item.score), 0) / history.length).toFixed(1)
+                  : '0.0'}
+              </strong>
+            </div>
+          </div>
+        </section>
+        <section className="panel top-vendors">
+          <div className="panel-heading">
+            <div>
+              <h2>Top Vendors</h2>
+              <p>Most frequently analyzed vendors</p>
+            </div>
+          </div>
+
+          {topVendors.length === 0 ? (
+            <div className="alerts-empty">
+              No vendor analytics available.
+            </div>
+          ) : (
+            <div className="vendors-list">
+              {topVendors.map((vendor, index) => (
+                <div className="vendor-row" key={vendor.vendor}>
+                  <div className="vendor-info">
+                    <strong>{vendor.vendor}</strong>
+                    <span>{vendor.count} invoice{vendor.count > 1 ? 's' : ''}</span>
+                  </div>
+
+                  <div className="vendor-progress">
+                    <div
+                      className="vendor-progress-fill"
+                      style={{ width: `${(vendor.count / topVendors[0].count) * 100}%` }}
+                    />
+                  </div>
+
+                  <strong className="vendor-rank">#{index + 1}</strong>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+        <section className="panel analytics-chart">
+          <div className="analytics-header">
+            <div>
+              <h2>Risk Distribution</h2>
+              <p>Breakdown of analyses by fraud decision</p>
+            </div>
+          </div>
+
+          <div className="analytics-content">
+            <div className="chart-area">
+              <ResponsiveContainer width="100%" height={360}>
+                <PieChart>
+                  <Pie
+                    data={riskDistribution}
+                    dataKey="value"
+                    nameKey="name"
+                    innerRadius={80}
+                    outerRadius={120}
+                    paddingAngle={4}
+                    stroke="#10151f"
+                    strokeWidth={4}
+                    label={false}
+                    labelLine={false}
+                  >
+                    {riskDistribution.map((entry, index) => (
+                      <Cell key={entry.name} fill={COLORS[index]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+
+              <div className="chart-center">
+                <span>Total</span>
+                <strong>{history.length}</strong>
+              </div>
+            </div>
+
+            <div className="chart-legend">
+              {riskDistribution.map((item, index) => {
+                const descriptions = [
+                  'Automatically approved',
+                  'Requires manual review',
+                  'Potential fraud detected',
+                ]
+
+                const percentage = history.length
+                  ? ((item.value / history.length) * 100).toFixed(1)
+                  : '0.0'
+
+                return (
+                  <div className="legend-item" key={item.name}>
+                    <div className="legend-left">
+                      <span
+                        className="legend-dot"
+                        style={{ backgroundColor: COLORS[index] }}
+                      />
+                      <div>
+                        <strong>{item.name}</strong>
+                        <small>{descriptions[index]}</small>
+                      </div>
+                    </div>
+
+                    <div className="legend-right">
+                      <strong>{item.value}</strong>
+                      <span>{percentage}%</span>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </section>
+        <section className="panel trend-chart">
+          <div className="panel-heading">
+            <div>
+              <h2>Risk Trend</h2>
+              <p>Fraud risk across recent analyses</p>
+            </div>
+          </div>
+
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={trendData}>
+              <CartesianGrid stroke="#242b36" strokeDasharray="4 4" />
+              <XAxis dataKey="analysis" stroke="#7f8998" />
+              <YAxis stroke="#7f8998" />
+              <Tooltip />
+              <Line
+                type="monotone"
+                dataKey="risk"
+                stroke="#4f8cff"
+                strokeWidth={3}
+                dot={{ r: 4 }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </section>
+
+        <section className="panel ai-insights">
+          <div className="panel-heading">
+            <div>
+              <h2>AI Insights</h2>
+              <p>Automatically generated from recent analyses</p>
+            </div>
+          </div>
+
+          <div className="insight-grid">
+            <div className="insight-card">
+              <span>Approval Rate</span>
+              <strong>{approvalRate}%</strong>
+            </div>
+
+            <div className="insight-card">
+              <span>Average Risk</span>
+              <strong>{averageRisk}</strong>
+            </div>
+
+            <div className="insight-card full-width">
+              <span>Highest Risk Invoice</span>
+              <strong>{highestRisk.invoice_number || 'N/A'}</strong>
+              <small>
+                {highestRisk.vendor || 'No data'} • Risk {highestRisk.score ?? '-'}
+              </small>
+            </div>
+
+            <div className="insight-recommendation full-width">
+              <h3>Recommendation</h3>
+              <p>
+                {Number(averageRisk) > 60
+                  ? 'Fraud risk is elevated. Increase manual verification for incoming invoices.'
+                  : 'Overall fraud risk is stable. Continue monitoring and review flagged invoices.'}
+              </p>
+            </div>
+          </div>
+        </section>
+        <section className="panel recent-alerts">
+          <div className="panel-heading">
+            <div>
+              <h2>Recent High-Risk Alerts</h2>
+              <p>Invoices requiring immediate attention</p>
+            </div>
+          </div>
+
+          {highRiskAlerts.length === 0 ? (
+            <div className="alerts-empty">
+              No critical invoices detected.
+            </div>
+          ) : (
+            <div className="alerts-list">
+              {highRiskAlerts.map(alert => (
+                <div className="alert-item" key={alert.id}>
+                  <div>
+                    <strong>{alert.invoice_number}</strong>
+                    <p>{alert.vendor}</p>
+                  </div>
+
+                  <div className="alert-meta">
+                    <span className="alert-score">{Number(alert.score).toFixed(0)}</span>
+                    <span className={`history-decision ${alert.decision}`}>
+                      {alert.decision.toUpperCase()}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
         <section className="upload-card panel">
           <div className="panel-heading">
             <h2>Upload Invoice</h2>
@@ -265,6 +559,69 @@ function App() {
                     </div>
                   ))}
                 </div>
+                {result.investigation_report && (
+                  <div className="detail-panel">
+
+                    <h3>Fraud Investigation Report</h3>
+                    <div className="detail-list">
+                      <div>
+                        <span>Case ID</span>
+                        <strong>{result.investigation_report.case_id || 'N/A'}</strong>
+                      </div>
+                      <div>
+                        <span>Status</span>
+                        <strong>{result.investigation_report.status || 'N/A'}</strong>
+                      </div>
+                      <div>
+                        <span>Generated At</span>
+                        <strong>{result.investigation_report.generated_at || 'N/A'}</strong>
+                      </div>
+                      <div>
+                        <span>Generated By</span>
+                        <strong>{result.investigation_report.generated_by || 'N/A'}</strong>
+                      </div>
+                    </div>
+
+                    <div className="detail-list">
+                      <div>
+                        <span>Decision</span>
+                        <strong>{result.investigation_report.decision}</strong>
+                      </div>
+                      <div>
+                        <span>Risk Score</span>
+                        <strong>{result.investigation_report.risk_score}</strong>
+                      </div>
+                    </div>
+
+                    <h3>AI Summary</h3>
+                    <p className="decision-reason">
+                      {result.investigation_report.summary}
+                    </p>
+
+                    <h3>Recommended Actions</h3>
+                    <div className="signals-list">
+                      {(result.investigation_report.recommended_actions || []).map((action, index) => (
+                        <div className="signal" key={index}>
+                          <div>
+                            <strong>Action {index + 1}</strong>
+                            <p>{action}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <button 
+                      onClick={() => 
+                        downloadInvestigationReport(
+                          result.investigation_report,
+                          result
+                        )
+                      }
+                      className="analyze-button"
+                    >
+                      📥 Download Report
+                      </button>
+                  </div>
+                )}
               </div>
             </>
           )}

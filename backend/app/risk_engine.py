@@ -1,5 +1,3 @@
-
-
 from backend.app.fraud_engine import FraudEngine
 from backend.app.ml_detector import MLAnomalyDetector
 

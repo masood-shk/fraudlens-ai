@@ -1,7 +1,10 @@
-
-
 from backend.app.invoice_extractor import InvoiceExtractor
+
 from backend.app.vendor_matcher import VendorMatcher
+import pandas as pd
+from backend.app.ml.predictor import predict_invoice
+from backend.app.decision_fusion import DecisionFusionEngine
+from backend.app.explanation_engine import ExplanationEngine
 
 
 class AnalysisPipeline:
@@ -55,6 +58,35 @@ class AnalysisPipeline:
 
         risk_engine = RiskFusionEngine()
         fraud_analysis = risk_engine.analyze_invoice(invoice_for_analysis)
+
+        # -----------------------------
+        # Machine Learning Analysis
+        # -----------------------------
+        invoice_df = pd.DataFrame([invoice_for_analysis])
+        vendors_df = pd.read_csv("data/vendors.csv")
+        po_df = pd.read_csv("data/purchase_orders.csv")
+
+        ml_prediction, ml_score = predict_invoice(
+            invoice_df,
+            vendors_df,
+            po_df,
+        )
+
+        fusion_engine = DecisionFusionEngine()
+
+        fraud_analysis = fusion_engine.combine(
+            rule_analysis=fraud_analysis,
+            ml_prediction="ANOMALY" if ml_prediction[0] == -1 else "NORMAL",
+            anomaly_score=float(ml_score[0]),
+        )
+
+        explanation_engine = ExplanationEngine()
+
+        fraud_analysis["explanation"] = explanation_engine.generate(
+            fraud_analysis=fraud_analysis,
+            extracted_invoice=extracted_invoice,
+            vendor_match=vendor_match,
+        )
 
         return {
             "status": "completed",
